@@ -17,22 +17,33 @@ namespace Translator.Service.Services
         private readonly TokenService _tokenService;
         private readonly YandexConfiguration _config;
 
+        private List<string> _supportedLanguages;
+
         public YandexTranslationService(ICacheService cacheService, TokenService tokenService, IOptions<YandexConfiguration> config)
         {
             _cacheService = cacheService;
             _tokenService = tokenService;
             _config = config.Value;
             _httpClient = new HttpClient();
+
+            _supportedLanguages = GetSupportedLanguagesAsync().Result;
         }
 
         public string Info()
         {
-            return $"Yandex Translate API with Folder: {_config.FolderName}.\n{_cacheService.Info()}";
+            return $"Yandex Translate API.\n{_cacheService.Info()}";
         }
 
         public async Task<string> TranslateAsync(string text, string targetLanguage)
         {
-            var key = $"{targetLanguage}:{text}";
+            var loweredLanguageCode = targetLanguage.ToLower();
+
+            if (!_supportedLanguages.Contains(loweredLanguageCode))
+            {
+                return $"The language code {targetLanguage} could not be recognized";
+            }
+
+            var key = $"{loweredLanguageCode}:{text}";
             var cachedTranslation = await _cacheService.GetAsync(key);
 
             if (!string.IsNullOrEmpty(cachedTranslation))
@@ -42,7 +53,7 @@ namespace Translator.Service.Services
 
             var requestBody = new YandexTranslateRequest
             {
-                TargetLanguageCode = targetLanguage,
+                TargetLanguageCode = loweredLanguageCode,
                 Texts = new[] { text },
                 FolderId = _config.FolderName
             };
@@ -81,6 +92,43 @@ namespace Translator.Service.Services
             }
 
             throw new HttpRequestException("Translation request failed.");
+        }
+
+        public async Task<List<string>> GetSupportedLanguagesAsync()
+        {
+            if (_supportedLanguages != null)
+            {
+                return _supportedLanguages;
+            }
+
+            var requestBody = new { folderId = _config.FolderName };
+
+            var requestContent = new StringContent(
+                JsonSerializer.Serialize(requestBody),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var token = await _tokenService.GetTokenAsync();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.PostAsync(
+                "https://translate.api.cloud.yandex.net/translate/v2/languages",
+                requestContent
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var languagesResponse = JsonSerializer.Deserialize<YandexSupportedLanguagesResponse>(responseBody);
+                _supportedLanguages = languagesResponse?.Languages.Select(l => l.Code).ToList() ?? new List<string>();
+                return _supportedLanguages;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to get supported languages. Status: {response.StatusCode}, Content: {errorContent}");
+            }
         }
     }
 }
