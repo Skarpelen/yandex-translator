@@ -1,16 +1,34 @@
-﻿using System.Net.Http.Json;
-
-namespace Translator.ConsoleApp
+﻿namespace Translator.ConsoleApp
 {
+    using Translator.Shared.Interfaces;
     using Translator.Shared.Models;
 
     public class Program
     {
-        private static readonly HttpClient client = new HttpClient { BaseAddress = new Uri("https://localhost:7216/api/translation/") };
-
         static async Task Main(string[] args)
         {
             Console.WriteLine("Translation Console App");
+            Console.WriteLine("Choose connection type:");
+            Console.WriteLine("1 - REST API");
+            Console.WriteLine("2 - gRPC");
+
+            ITranslationClient client = null;
+            var choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    client = new RestTranslationClient();
+                    break;
+                case "2":
+                    client = new GrpcTranslationClient("https://localhost:7216");
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Exiting...");
+                    Console.ReadKey();
+                    return;
+            }
+
             Console.Write("Enter text to translate: ");
             var text = Console.ReadLine();
 
@@ -24,39 +42,13 @@ namespace Translator.ConsoleApp
                 TargetLanguage = targetLanguage
             };
 
-            var translation = await TranslateAsync(request);
+            var translation = await client.TranslateAsync(request);
             Console.WriteLine("Translation: " + translation);
 
-            var info = await GetServiceInfoAsync();
+            var info = await client.GetServiceInfoAsync();
             Console.WriteLine("Service Info: " + info);
 
-            Console.ReadLine();
-        }
-
-        static async Task<string> TranslateAsync(TranslateRequest request)
-        {
-            var response = await client.PostAsJsonAsync("translate", request);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-
-            Console.WriteLine("Error: " + response.ReasonPhrase);
-            return null;
-        }
-
-        static async Task<string> GetServiceInfoAsync()
-        {
-            var response = await client.GetAsync("info");
-
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-
-            Console.WriteLine("Error: " + response.ReasonPhrase);
-            return null;
+            Console.ReadKey();
         }
     }
 }

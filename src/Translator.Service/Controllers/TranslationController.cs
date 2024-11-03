@@ -9,7 +9,7 @@ namespace Translator.Service.Controllers
     [Route("api/[controller]")]
     public class TranslationController : ControllerBase
     {
-        private ITranslationService _translationService;
+        private readonly ITranslationService _translationService;
 
         public TranslationController(ITranslationService translationService)
         {
@@ -17,20 +17,15 @@ namespace Translator.Service.Controllers
         }
 
         [HttpGet("info")]
-        public IActionResult GetInfo()
+        public async Task<IActionResult> GetInfo()
         {
-            var info = _translationService.Info();
+            var info = await _translationService.GetInfoAsync();
             return Ok(info);
         }
 
         [HttpPost("translate")]
         public async Task<IActionResult> Translate([FromBody] TranslateRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Text) || string.IsNullOrWhiteSpace(request.TargetLanguage))
-            {
-                return BadRequest("Text and target language are required.");
-            }
-
             var result = await _translationService.TranslateAsync(request.Text, request.SourceLanguage, request.TargetLanguage);
             return Ok(result);
         }

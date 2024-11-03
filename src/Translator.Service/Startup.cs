@@ -3,6 +3,7 @@
 namespace Translator.Service
 {
     using Translator.Service.Cache;
+    using Translator.Service.gRPC;
     using Translator.Service.Services;
     using Translator.Service.Structs;
     using Translator.Shared.Interfaces;
@@ -19,6 +20,7 @@ namespace Translator.Service
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddGrpc();
 
             services.Configure<YandexConfiguration>(Configuration.GetSection("YandexConfiguration"));
             services.AddSingleton<ITranslationService, YandexTranslationService>();
@@ -55,6 +57,7 @@ namespace Translator.Service
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapGrpcService<TranslatorService>();
             });
         }
     }

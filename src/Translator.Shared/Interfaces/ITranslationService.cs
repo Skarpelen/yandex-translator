@@ -4,6 +4,6 @@
     {
         Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage);
 
-        string Info();
+        Task<string> GetInfoAsync();
     }
 }

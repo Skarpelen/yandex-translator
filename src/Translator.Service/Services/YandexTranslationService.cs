@@ -30,7 +30,7 @@ namespace Translator.Service.Services
             _supportedLanguages = GetSupportedLanguagesAsync().Result;
         }
 
-        public string Info()
+        public async Task<string> GetInfoAsync()
         {
             return $"Yandex Translate API.\n{_cacheService.Info()}";
         }

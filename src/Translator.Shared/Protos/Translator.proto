@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option csharp_namespace = "Translator.Shared";
+
+service Translator {
+    rpc Translate (TranslateRequest) returns (TranslateReply);
+    rpc GetInfo (InfoRequest) returns (InfoReply);
+}
+
+message TranslateRequest {
+    string text = 1;
+    string sourceLanguage = 2;
+    string targetLanguage = 3;
+}
+
+message TranslateReply {
+    string translatedText = 1;
+}
+
+message InfoRequest {}
+
+message InfoReply {
+    string info = 1;
+}
