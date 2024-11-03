@@ -5,6 +5,7 @@ using System.Text.Json;
 
 namespace Translator.Service.Services
 {
+    using System.Linq;
     using Translator.Service.Cache;
     using Translator.Service.Models;
     using Translator.Service.Structs;
@@ -34,16 +35,23 @@ namespace Translator.Service.Services
             return $"Yandex Translate API.\n{_cacheService.Info()}";
         }
 
-        public async Task<string> TranslateAsync(string text, string targetLanguage)
+        public async Task<string> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
         {
-            var loweredLanguageCode = targetLanguage.ToLower();
+            var loweredTargetLanguageCode = targetLanguage.ToLower();
 
-            if (!_supportedLanguages.Contains(loweredLanguageCode))
+            if (!_supportedLanguages.Contains(loweredTargetLanguageCode))
             {
                 return $"The language code {targetLanguage} could not be recognized";
             }
 
-            var key = $"{loweredLanguageCode}:{text}";
+            var loweredSourceLanguageCode = sourceLanguage.ToLower();
+
+            if (!sourceLanguage.Equals("auto") && !_supportedLanguages.Contains(loweredSourceLanguageCode))
+            {
+                return $"The language code {sourceLanguage} could not be recognized";
+            }
+
+            var key = $"{loweredSourceLanguageCode}:{loweredTargetLanguageCode}:{text}";
             var cachedTranslation = await _cacheService.GetAsync(key);
 
             if (!string.IsNullOrEmpty(cachedTranslation))
@@ -53,7 +61,8 @@ namespace Translator.Service.Services
 
             var requestBody = new YandexTranslateRequest
             {
-                TargetLanguageCode = loweredLanguageCode,
+                SourceLanguageCode = sourceLanguage.Equals("auto") ? null : loweredSourceLanguageCode,
+                TargetLanguageCode = loweredTargetLanguageCode,
                 Texts = new[] { text },
                 FolderId = _config.FolderId
             };

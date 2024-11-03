@@ -10,6 +10,9 @@ namespace Translator.Service.Models
         [JsonPropertyName("texts")]
         public string[] Texts { get; set; }
 
+        [JsonPropertyName("sourcetLanguageCode")]
+        public string SourceLanguageCode { get; set; }
+
         [JsonPropertyName("targetLanguageCode")]
         public string TargetLanguageCode { get; set; }
     }

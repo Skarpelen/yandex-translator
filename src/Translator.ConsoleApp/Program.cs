@@ -20,6 +20,7 @@ namespace Translator.ConsoleApp
             var request = new TranslateRequest
             {
                 Text = text,
+                SourceLanguage = "auto",
                 TargetLanguage = targetLanguage
             };
 

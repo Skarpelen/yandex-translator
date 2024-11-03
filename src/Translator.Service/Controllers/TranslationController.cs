@@ -31,7 +31,7 @@ namespace Translator.Service.Controllers
                 return BadRequest("Text and target language are required.");
             }
 
-            var result = await _translationService.TranslateAsync(request.Text, request.TargetLanguage);
+            var result = await _translationService.TranslateAsync(request.Text, request.SourceLanguage, request.TargetLanguage);
             return Ok(result);
         }
     }
