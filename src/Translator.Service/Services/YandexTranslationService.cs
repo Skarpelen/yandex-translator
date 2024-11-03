@@ -55,7 +55,7 @@ namespace Translator.Service.Services
             {
                 TargetLanguageCode = loweredLanguageCode,
                 Texts = new[] { text },
-                FolderId = _config.FolderName
+                FolderId = _config.FolderId
             };
 
             var requestContent = new StringContent(
@@ -94,14 +94,9 @@ namespace Translator.Service.Services
             throw new HttpRequestException("Translation request failed.");
         }
 
-        public async Task<List<string>> GetSupportedLanguagesAsync()
+        private async Task<List<string>> GetSupportedLanguagesAsync()
         {
-            if (_supportedLanguages != null)
-            {
-                return _supportedLanguages;
-            }
-
-            var requestBody = new { folderId = _config.FolderName };
+            var requestBody = new { folderId = _config.FolderId };
 
             var requestContent = new StringContent(
                 JsonSerializer.Serialize(requestBody),

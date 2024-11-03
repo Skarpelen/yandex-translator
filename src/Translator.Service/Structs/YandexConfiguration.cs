@@ -2,7 +2,7 @@
 {
     public class YandexConfiguration
     {
-        public string FolderName { get; set; }
+        public string FolderId { get; set; }
 
         public string KeyId { get; set; }
 
